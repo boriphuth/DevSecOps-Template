@@ -63,7 +63,7 @@ node {
 			}
         	snykSecurity failOnIssues: false, projectName: '$BUILD_NUMBER', severity: 'high', snykInstallation: 'Snyk', snykTokenId: 'snyk-token', targetFile: "${repoName}/${folderName}/${app_type}"
 		   
-			def snykFile = readFile "snyk_report.html"
+			def snykFile = readFile "${repoName}/snyk_report.html"
 			if (snykFile.exists()) {
 				throw new Exception("Vulnerable dependencies found!")    
 			}
@@ -73,51 +73,51 @@ node {
 			}
 	  	}
 	}
-	stage('SAST'){
-		catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
-			if (appType.equalsIgnoreCase("Java")){
-				withSonarQubeEnv('sonarqube'){
-					dir("${repoName}"){
-						sh "mvn clean package sonar:sonar"
-					}
-				}
+	// stage('SAST'){
+	// 	catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
+	// 		if (appType.equalsIgnoreCase("Java")){
+	// 			withSonarQubeEnv('sonarqube'){
+	// 				dir("${repoName}"){
+	// 					sh "mvn clean package sonar:sonar"
+	// 				}
+	// 			}
 				
-				timeout(time: 1, unit: 'HOURS'){   
-				def qg = waitForQualityGate() 
-				if (qg.status != 'OK') {     
-						error "Pipeline aborted due to quality gate failure: ${qg.status}"    
-					}	
-				}
-			}
-    	}
-	}
-	stage('Container Image Scan'){
-    	catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
-	    	sh "rm anchore_images || true"
-            sh """ echo "$dockerImage" > anchore_images"""
-            anchore 'anchore_images'
-	  	}
-    }
-	stage('DAST'){
-    	catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
-			sh """
-			rm -rf Archerysec-ZeD/zap_result/owasp_report || true
-			docker run -v `pwd`/Archerysec-ZeD/:/zap/wrk/:rw -t owasp/zap2docker-stable zap-baseline.py \
-				-t ${targetURL} -J owasp_report
-			"""
-        }
-	}
-	stage('Inspec'){
-  		catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
-			/*to install inspec as a package
-			curl https://omnitruck.chef.io/install.sh | sudo bash -s -- -P inspec*/
-			sh """
-				rm inspec_results || true
-				inspec exec Inspec/hardening-test -b ssh --host=${hostMachineIP} --user=${hostMachineName} -i ~/.ssh/id_rsa --reporter json:./inspec_results
-				cat inspec_results | jq
-			"""
-	  	}	
-	}
+	// 			timeout(time: 1, unit: 'HOURS'){   
+	// 			def qg = waitForQualityGate() 
+	// 			if (qg.status != 'OK') {     
+	// 					error "Pipeline aborted due to quality gate failure: ${qg.status}"    
+	// 				}	
+	// 			}
+	// 		}
+    // 	}
+	// }
+	// stage('Container Image Scan'){
+    // 	catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
+	//     	sh "rm anchore_images || true"
+    //         sh """ echo "$dockerImage" > anchore_images"""
+    //         anchore 'anchore_images'
+	//   	}
+    // }
+	// stage('DAST'){
+    // 	catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
+	// 		sh """
+	// 		rm -rf Archerysec-ZeD/zap_result/owasp_report || true
+	// 		docker run -v `pwd`/Archerysec-ZeD/:/zap/wrk/:rw -t owasp/zap2docker-stable zap-baseline.py \
+	// 			-t ${targetURL} -J owasp_report
+	// 		"""
+    //     }
+	// }
+	// stage('Inspec'){
+  	// 	catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
+	// 		/*to install inspec as a package
+	// 		curl https://omnitruck.chef.io/install.sh | sudo bash -s -- -P inspec*/
+	// 		sh """
+	// 			rm inspec_results || true
+	// 			inspec exec Inspec/hardening-test -b ssh --host=${hostMachineIP} --user=${hostMachineName} -i ~/.ssh/id_rsa --reporter json:./inspec_results
+	// 			cat inspec_results | jq
+	// 		"""
+	//   	}	
+	// }
 	stage('Clean up'){
 		catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
         	sh """
