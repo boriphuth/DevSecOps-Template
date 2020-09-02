@@ -1,7 +1,7 @@
 properties ([
   parameters ([
     string(name: 'appRepoURL', value: "https://github.com/boriphuth/sample.git", description: "Application's git repository"),
-	// string(name: 'folderName', value: "backend", description: "Project's folder name"),
+	string(name: 'folderName', value: "backend", description: "Project's folder name"),
     string(name: 'dockerImage', value: "devops/ui:prod", description: "docker Image with tag"),
     string(name: 'targetURL', value: "http://production.devops", description: "Web application's URL"),
     choice(name: 'appType', choices: ['Java', 'Node', 'Angular'], description: 'Type of application'),
@@ -61,9 +61,8 @@ node {
 					sh "npm install"
 				}
 			}
-        	// snykSecurity failOnIssues: false, projectName: '$BUILD_NUMBER', severity: 'high', snykInstallation: 'Snyk', snykTokenId: 'snyk-token', targetFile: "${repoName}/${folderName}/${app_type}"
-		    snykSecurity failOnIssues: false, projectName: '$BUILD_NUMBER', severity: 'high', snykInstallation: 'Snyk', snykTokenId: 'snyk-token'
-
+        	snykSecurity failOnIssues: false, projectName: '$BUILD_NUMBER', severity: 'high', snykInstallation: 'Snyk', snykTokenId: 'snyk-token', targetFile: "${repoName}/${folderName}/${app_type}"
+		   
 			def snykFile = readFile "${repoName}/snyk_report.html"
 			if (snykFile.exists()) {
 				throw new Exception("Vulnerable dependencies found!")    
