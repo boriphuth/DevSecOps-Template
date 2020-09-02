@@ -63,7 +63,7 @@ node {
 			}
         	snykSecurity failOnIssues: false, monitorProjectOnBuild: false, snykInstallation: 'Snyk', snykTokenId: 'snyk-token', targetFile: "${repoName}/${folderName}/${app_type}"
 		   
-			def snykFile = readFile "${repoName}/snyk_report.html"
+			def snykFile = readFile "snyk_report.html"
 			if (snykFile.exists()) {
 				throw new Exception("Vulnerable dependencies found!")    
 			}
