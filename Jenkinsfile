@@ -52,7 +52,7 @@ node {
 	    	sh "git clone ${appRepoURL} || true" 
             repoName = sh(returnStdout: true, script: """echo \$(basename ${appRepoURL.trim()})""").trim()
             repoName =sh(returnStdout: true, script: """echo ${repoName} | sed 's/.git//g'""").trim()
-			repoName += sh(returnStdout: true, script: """echo ${folderName}""").trim()
+			repoName += sh(returnStdout: true, script: """echo \$(basename ${folderName.trim()})""").trim()
 	    	if (appType.equalsIgnoreCase("Java")){
 	      		app_type = "pom.xml"	
 	    	}
