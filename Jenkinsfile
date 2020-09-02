@@ -129,26 +129,26 @@ node {
 	// 		"""
 	//   	}	
 	// }
-	stage('Clean up'){
-		catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
-        	sh """
-				rm -r ${repoName} || true
-				mkdir -p reports/trufflehog
-				mkdir -p reports/snyk
-				mkdir -p reports/Anchore-Engine
-				mkdir -p reports/OWASP
-				mkdir -p reports/Inspec
-            	mv trufflehog reports/trufflehog || true
-				mv *.json *.html reports/snyk || true
-				cp -r /var/lib/jenkins/jobs/${JOB_NAME}/builds/${BUILD_NUMBER}/archive/Anchore*/*.json ./reports/Anchore-Engine ||  true
-				mv inspec_results reports/Inspec || true
-            """
-			//cp Archerysec-ZeD/owasp_report reports/OWASP/ || ture	    
-			sh """
-				docker system prune -f
-				docker-compose -f Sonarqube/sonar.yml down
-				docker-compose -f Anchore-Engine/docker-compose.yaml down -v
-			"""
-	  	}
-    }
+	// stage('Clean up'){
+	// 	catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
+    //     	sh """
+	// 			rm -r ${repoName} || true
+	// 			mkdir -p reports/trufflehog
+	// 			mkdir -p reports/snyk
+	// 			mkdir -p reports/Anchore-Engine
+	// 			mkdir -p reports/OWASP
+	// 			mkdir -p reports/Inspec
+    //         	mv trufflehog reports/trufflehog || true
+	// 			mv *.json *.html reports/snyk || true
+	// 			cp -r /var/lib/jenkins/jobs/${JOB_NAME}/builds/${BUILD_NUMBER}/archive/Anchore*/*.json ./reports/Anchore-Engine ||  true
+	// 			mv inspec_results reports/Inspec || true
+    //         """
+	// 		//cp Archerysec-ZeD/owasp_report reports/OWASP/ || ture	    
+	// 		sh """
+	// 			docker system prune -f
+	// 			docker-compose -f Sonarqube/sonar.yml down
+	// 			docker-compose -f Anchore-Engine/docker-compose.yaml down -v
+	// 		"""
+	//   	}
+    // }
 }
