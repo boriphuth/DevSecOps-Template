@@ -22,14 +22,14 @@ node {
 			workspace = pwd ()
 		}
     }
-    // stage('pre-build setup'){
-	// 	catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
-	//     	sh """
-    //         	docker-compose -f Sonarqube/sonar.yml up -d
-    //         	docker-compose -f Anchore-Engine/docker-compose.yaml up -d
-    //      	"""
-	//   	}
-    // } 
+    stage('pre-build setup'){
+		catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
+	    	sh """
+            	docker-compose -f Sonarqube/sonar.yml up -d
+            	docker-compose -f Anchore-Engine/docker-compose.yaml up -d
+         	"""
+	  	}
+    } 
     stage('Check secrets'){
 		catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE'){
     		sh """
@@ -63,34 +63,34 @@ node {
 			}
         	snykSecurity failOnIssues: false, monitorProjectOnBuild: false, snykInstallation: 'Snyk', snykTokenId: 'snyk-token', targetFile: "${repoName}/${folderName}/${app_type}"
 		   
-			def snykFile = readFile 'snyk_report.html'
-			if (snykFile.exists()) {
-				throw new Exception("Vulnerable dependencies found!")    
-			}
-			else {
-				echo "Please enter the app repo URL"
-				currentBuild.Result = "FAILURE"
-			}
+			// def snykFile = readFile 'snyk_report.html'
+			// if (snykFile.exists()) {
+			// 	throw new Exception("Vulnerable dependencies found!")    
+			// }
+			// else {
+			// 	echo "Please enter the app repo URL"
+			// 	currentBuild.Result = "FAILURE"
+			// }
 	  	}
 	}
-	// stage('SAST'){
-	// 	catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
-	// 		if (appType.equalsIgnoreCase("Java")){
-	// 			withSonarQubeEnv('sonarqube'){
-	// 				dir("${repoName}"){
-	// 					sh "mvn clean package sonar:sonar"
-	// 				}
-	// 			}
+	stage('SAST'){
+		catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
+			if (appType.equalsIgnoreCase("Java")){
+				withSonarQubeEnv('sonarqube'){
+					dir("${repoName}"){
+						sh "mvn clean package sonar:sonar"
+					}
+				}
 				
-	// 			timeout(time: 1, unit: 'HOURS'){   
-	// 			def qg = waitForQualityGate() 
-	// 			if (qg.status != 'OK') {     
-	// 					error "Pipeline aborted due to quality gate failure: ${qg.status}"    
-	// 				}	
-	// 			}
-	// 		}
-    // 	}
-	// }
+				timeout(time: 1, unit: 'HOURS'){   
+				def qg = waitForQualityGate() 
+				if (qg.status != 'OK') {     
+						error "Pipeline aborted due to quality gate failure: ${qg.status}"    
+					}	
+				}
+			}
+    	}
+	}
 	// stage("docker_scan"){
     //   sh '''
     //     docker run -d --name db arminc/clair-db
@@ -102,53 +102,53 @@ node {
     //     ./clair-scanner --ip="$DOCKER_GATEWAY" myapp:latest || exit 0
     //   '''
     // }
-	// stage('Container Image Scan'){
-    // 	catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
-	//     	sh "rm anchore_images || true"
-    //         sh """ echo "$dockerImage" > anchore_images"""
-    //         anchore 'anchore_images'
-	//   	}
-    // }
-	// stage('DAST'){
-    // 	catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
-	// 		sh """
-	// 		rm -rf Archerysec-ZeD/zap_result/owasp_report || true
-	// 		docker run -v `pwd`/Archerysec-ZeD/:/zap/wrk/:rw -t owasp/zap2docker-stable zap-baseline.py \
-	// 			-t ${targetURL} -J owasp_report
-	// 		"""
-    //     }
-	// }
-	// stage('Inspec'){
-  	// 	catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
-	// 		/*to install inspec as a package
-	// 		curl https://omnitruck.chef.io/install.sh | sudo bash -s -- -P inspec*/
-	// 		sh """
-	// 			rm inspec_results || true
-	// 			inspec exec Inspec/hardening-test -b ssh --host=${hostMachineIP} --user=${hostMachineName} -i ~/.ssh/id_rsa --reporter json:./inspec_results
-	// 			cat inspec_results | jq
-	// 		"""
-	//   	}	
-	// }
-	// stage('Clean up'){
-	// 	catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
-    //     	sh """
-	// 			rm -r ${repoName} || true
-	// 			mkdir -p reports/trufflehog
-	// 			mkdir -p reports/snyk
-	// 			mkdir -p reports/Anchore-Engine
-	// 			mkdir -p reports/OWASP
-	// 			mkdir -p reports/Inspec
-    //         	mv trufflehog reports/trufflehog || true
-	// 			mv *.json *.html reports/snyk || true
-	// 			cp -r /var/lib/jenkins/jobs/${JOB_NAME}/builds/${BUILD_NUMBER}/archive/Anchore*/*.json ./reports/Anchore-Engine ||  true
-	// 			mv inspec_results reports/Inspec || true
-    //         """
-	// 		//cp Archerysec-ZeD/owasp_report reports/OWASP/ || ture	    
-	// 		sh """
-	// 			docker system prune -f
-	// 			docker-compose -f Sonarqube/sonar.yml down
-	// 			docker-compose -f Anchore-Engine/docker-compose.yaml down -v
-	// 		"""
-	//   	}
-    // }
+	stage('Container Image Scan'){
+    	catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
+	    	sh "rm anchore_images || true"
+            sh """ echo "$dockerImage" > anchore_images"""
+            anchore 'anchore_images'
+	  	}
+    }
+	stage('DAST'){
+    	catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
+			sh """
+			rm -rf Archerysec-ZeD/zap_result/owasp_report || true
+			docker run -v `pwd`/Archerysec-ZeD/:/zap/wrk/:rw -t owasp/zap2docker-stable zap-baseline.py \
+				-t ${targetURL} -J owasp_report
+			"""
+        }
+	}
+	stage('Inspec'){
+  		catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
+			/*to install inspec as a package
+			curl https://omnitruck.chef.io/install.sh | sudo bash -s -- -P inspec*/
+			sh """
+				rm inspec_results || true
+				inspec exec Inspec/hardening-test -b ssh --host=${hostMachineIP} --user=${hostMachineName} -i ~/.ssh/id_rsa --reporter json:./inspec_results
+				cat inspec_results | jq
+			"""
+	  	}	
+	}
+	stage('Clean up'){
+		catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
+        	sh """
+				rm -r ${repoName} || true
+				mkdir -p reports/trufflehog
+				mkdir -p reports/snyk
+				mkdir -p reports/Anchore-Engine
+				mkdir -p reports/OWASP
+				mkdir -p reports/Inspec
+            	mv trufflehog reports/trufflehog || true
+				mv *.json *.html reports/snyk || true
+				cp -r /var/lib/jenkins/jobs/${JOB_NAME}/builds/${BUILD_NUMBER}/archive/Anchore*/*.json ./reports/Anchore-Engine ||  true
+				mv inspec_results reports/Inspec || true
+            """
+			//cp Archerysec-ZeD/owasp_report reports/OWASP/ || ture	    
+			sh """
+				docker system prune -f
+				docker-compose -f Sonarqube/sonar.yml down
+				docker-compose -f Anchore-Engine/docker-compose.yaml down -v
+			"""
+	  	}
+    }
 }
