@@ -1,11 +1,12 @@
 properties ([
   parameters ([
-    string(name: 'appRepoURL', value: "", description: "Application's git repository"),
-    string(name: 'dockerImage', value: "", description: "docker Image with tag"),
-    string(name: 'targetURL', value: "", description: "Web application's URL"),
+    string(name: 'appRepoURL', value: "https://github.com/boriphuth/sample.git", description: "Application's git repository"),
+	string(name: 'folderName', value: "backend", description: "docker Image with tag"),
+    string(name: 'dockerImage', value: "devops/ui:prod", description: "docker Image with tag"),
+    string(name: 'targetURL', value: "http://production.devops", description: "Web application's URL"),
     choice(name: 'appType', choices: ['Java', 'Node', 'Angular'], description: 'Type of application'),
-    string(name: 'hostMachineName', value: "", description: "Hostname of the machine"),
-    string(name: 'hostMachineIP', value: "", description: "Public IP of the host machine")
+    string(name: 'hostMachineName', value: "production.devops", description: "Hostname of the machine"),
+    string(name: 'hostMachineIP', value: "192.168.34.13", description: "Public IP of the host machine")
    // password(name: 'hostMachinePassword', value: "", description: "Password of the target machine")
     ])
 ])
@@ -49,8 +50,9 @@ node {
 	stage('Source Composition Analysis'){
 		catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE'){
 	    	sh "git clone ${appRepoURL} || true" 
-            repoName = sh(returnStdout: true, script: """echo \$(basename ${appRepoURL.trim()})""").trim()
-            repoName=sh(returnStdout: true, script: """echo ${repoName} | sed 's/.git//g'""").trim()
+            // repoName = sh(returnStdout: true, script: """echo \$(basename ${appRepoURL.trim()})""").trim()
+            // repoName=sh(returnStdout: true, script: """echo ${repoName} | sed 's/.git//g'""").trim()
+			repoName=sh(folderName).trim()
 	    	if (appType.equalsIgnoreCase("Java")){
 	      		app_type = "pom.xml"	
 	    	}
@@ -139,16 +141,4 @@ node {
 			"""
 	  	}
     }
-	post {
-      failure {
-         script {
-            currentBuild.result = 'FAILURE'
-         }
-      }
-      always {
-            step([$class: 'Mailer', notifyEveryUnstableBuild: true,recipients: "build-failed@devops.local",sendToIndividuals: true])
-            step([$class: 'WsCleanup'])
-      }
-   }
 }
-       
