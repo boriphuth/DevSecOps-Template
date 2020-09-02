@@ -61,8 +61,9 @@ node {
 					sh "npm install"
 				}
 			}
-        	snykSecurity failOnIssues: false, projectName: '$BUILD_NUMBER', severity: 'high', snykInstallation: 'Snyk', snykTokenId: 'snyk-token', targetFile: "${repoName}/${folderName}/${app_type}"
-		   
+        	// snykSecurity failOnIssues: false, projectName: '$BUILD_NUMBER', severity: 'high', snykInstallation: 'Snyk', snykTokenId: 'snyk-token', targetFile: "${repoName}/${folderName}/${app_type}"
+		    snykSecurity failOnIssues: false, projectName: '$BUILD_NUMBER', severity: 'high', snykInstallation: 'Snyk', snykTokenId: 'snyk-token'
+
 			def snykFile = readFile "${repoName}/snyk_report.html"
 			if (snykFile.exists()) {
 				throw new Exception("Vulnerable dependencies found!")    
