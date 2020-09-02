@@ -61,7 +61,7 @@ node {
 					sh "npm install"
 				}
 			}
-        	snykSecurity snykInstallation: 'Snyk', snykTokenId: 'snyk-token', targetFile: "${repoName}/${folderName}/${app_type}"
+        	snykSecurity failOnIssues: false, monitorProjectOnBuild: false, snykInstallation: 'Snyk', snykTokenId: 'snyk-token', targetFile: "${repoName}/${folderName}/${app_type}"
 		   
 			def snykFile = readFile "${repoName}/snyk_report.html"
 			if (snykFile.exists()) {
@@ -91,17 +91,17 @@ node {
 	// 		}
     // 	}
 	// }
-	stage("docker_scan"){
-      sh '''
-        docker run -d --name db arminc/clair-db
-        sleep 15 # wait for db to come up
-        docker run -p 6060:6060 --link db:postgres -d --name clair arminc/clair-local-scan
-        sleep 1
-        DOCKER_GATEWAY=$(docker network inspect bridge --format "{{range .IPAM.Config}}{{.Gateway}}{{end}}")
-        wget -qO clair-scanner https://github.com/arminc/clair-scanner/releases/download/v8/clair-scanner_linux_amd64 && chmod +x clair-scanner
-        ./clair-scanner --ip="$DOCKER_GATEWAY" myapp:latest || exit 0
-      '''
-    }
+	// stage("docker_scan"){
+    //   sh '''
+    //     docker run -d --name db arminc/clair-db
+    //     sleep 15 # wait for db to come up
+    //     docker run -p 6060:6060 --link db:postgres -d --name clair arminc/clair-local-scan
+    //     sleep 1
+    //     DOCKER_GATEWAY=$(docker network inspect bridge --format "{{range .IPAM.Config}}{{.Gateway}}{{end}}")
+    //     wget -qO clair-scanner https://github.com/arminc/clair-scanner/releases/download/v8/clair-scanner_linux_amd64 && chmod +x clair-scanner
+    //     ./clair-scanner --ip="$DOCKER_GATEWAY" myapp:latest || exit 0
+    //   '''
+    // }
 	// stage('Container Image Scan'){
     // 	catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
 	//     	sh "rm anchore_images || true"
