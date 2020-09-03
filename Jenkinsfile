@@ -77,7 +77,7 @@ node {
 		catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
 			if (appType.equalsIgnoreCase("Java")){
 				withSonarQubeEnv('sonarqube'){
-					dir("${repoName}"){
+					dir("${repoName}/${folderName}"){
 						sh "mvn clean package sonar:sonar"
 					}
 				}
