@@ -22,6 +22,15 @@ node {
 			workspace = pwd ()
 		}
     }
+	stage('Init Sonarqube'){
+		catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
+	    	sh """
+                docker volume create --name sonarqube_data
+                docker volume create --name sonarqube_extensions
+                docker volume create --name sonarqube_logs
+         	"""
+	  	}
+    }
     stage('pre-build setup'){
 		catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
 	    	sh """
