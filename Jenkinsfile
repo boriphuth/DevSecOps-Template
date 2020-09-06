@@ -22,7 +22,7 @@ node {
 			workspace = pwd ()
 		}
     }
-	stage('Init Sonarqube'){
+	stage('Pre SetUp'){
 		catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
 	    	sh """
                 docker volume create --name sonarqube_data
@@ -31,18 +31,12 @@ node {
          	"""
 	  	}
     }
-    stage('pre-build setup'){
+    stage('Install Sonarqube and Anchore-Engine'){
 		catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
 	    	sh """
+				docker-compose -f Anchore-Engine/docker-compose.yaml up -d
 				docker-compose -f Sonarqube/docker-compose.yaml up -d
          	"""
-			// sh """
-			//     docker-compose -f Anchore-Engine/docker-compose.yaml up -d
-            //     docker run -d \
-            //     -p 9000:9000 \
-            //     -v sonarqube_extensions:/opt/sonarqube/extensions \
-            //     sonarqube:8.4-community
-         	// """  
 			 timeout(5) {
                 waitUntil {
                     def r = sh script: 'wget -q http://192.168.34.16:9000 -O /dev/null', returnStatus: true
@@ -115,17 +109,6 @@ node {
 			}
     	}
 	}
-	// stage("docker_scan"){
-    //   sh '''
-    //     docker run -d --name db arminc/clair-db
-    //     sleep 15 # wait for db to come up
-    //     docker run -p 6060:6060 --link db:postgres -d --name clair arminc/clair-local-scan
-    //     sleep 1
-    //     DOCKER_GATEWAY=$(docker network inspect bridge --format "{{range .IPAM.Config}}{{.Gateway}}{{end}}")
-    //     wget -qO clair-scanner https://github.com/arminc/clair-scanner/releases/download/v8/clair-scanner_linux_amd64 && chmod +x clair-scanner
-    //     ./clair-scanner --ip="$DOCKER_GATEWAY" myapp:latest || exit 0
-    //   '''
-    // }
 	stage('Container Image Scan'){
     	catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
 	    	sh "rm anchore_images || true"
@@ -175,4 +158,15 @@ node {
 			"""
 	  	}
     }
+	// stage("docker_scan"){
+    //   sh '''
+    //     docker run -d --name db arminc/clair-db
+    //     sleep 15 # wait for db to come up
+    //     docker run -p 6060:6060 --link db:postgres -d --name clair arminc/clair-local-scan
+    //     sleep 1
+    //     DOCKER_GATEWAY=$(docker network inspect bridge --format "{{range .IPAM.Config}}{{.Gateway}}{{end}}")
+    //     wget -qO clair-scanner https://github.com/arminc/clair-scanner/releases/download/v8/clair-scanner_linux_amd64 && chmod +x clair-scanner
+    //     ./clair-scanner --ip="$DOCKER_GATEWAY" myapp:latest || exit 0
+    //   '''
+    // }
 }
