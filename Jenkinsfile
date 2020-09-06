@@ -169,8 +169,8 @@ node {
 			//cp Archerysec-ZeD/owasp_report reports/OWASP/ || ture	    
 			sh """
 				docker system prune -f
-				docker-compose -f Sonarqube/sonar.yml down
 				docker-compose -f Anchore-Engine/docker-compose.yaml down -v
+				docker-compose -f Sonarqube/docker-compose.yaml down
 			"""
 	  	}
     }
