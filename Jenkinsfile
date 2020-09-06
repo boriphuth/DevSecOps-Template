@@ -76,15 +76,15 @@ node {
 	}
 	stage('Install Sonarqube'){
 		catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
-			// sh """
-            //     docker run -d \
-            //     -p 9000:9000 \
-            //     -v sonarqube_extensions:/opt/sonarqube/extensions \
-            //     sonarqube:8.4-community
-         	// """ 
 			sh """
-                docker-compose -f Sonarqube/docker-compose.yaml up -d
+                docker run -d \
+                -p 9000:9000 \
+                -v sonarqube_extensions:/opt/sonarqube/extensions \
+                sonarqube:8.4-community
          	""" 
+			// sh """
+            //     docker-compose -f Sonarqube/docker-compose.yaml up -d
+         	// """ 
 			 timeout(5) {
                 waitUntil {
                     def r = sh script: 'wget -q http://192.168.34.16:9000 -O /dev/null', returnStatus: true
