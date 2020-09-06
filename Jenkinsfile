@@ -33,9 +33,9 @@ node {
     }
     stage('pre-build setup'){
 		catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
-	    	sh """
-            	docker-compose -f Anchore-Engine/docker-compose.yaml up -d
-         	"""
+	    	// sh """
+            // 	docker-compose -f Anchore-Engine/docker-compose.yaml up -d
+         	// """
 			sh """
                 docker run -d \
                 -p 9000:9000 \
@@ -103,9 +103,11 @@ node {
 					}
 				}
 				
-				timeout(time: 1, unit: 'HOURS'){   
-				def qg = waitForQualityGate() 
-				if (qg.status != 'OK') {     
+				sleep(60)
+
+				timeout(5) {
+					def qg = waitForQualityGate() 
+					if (qg.status != 'OK') {     
 						error "Pipeline aborted due to quality gate failure: ${qg.status}"    
 					}	
 				}
