@@ -34,7 +34,6 @@ node {
     stage('Install Sonarqube and Anchore-Engine'){
 		catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
 	    	sh """
-				docker-compose -f Anchore-Engine/docker-compose.yaml up -d
 				docker-compose -f Sonarqube/docker-compose.yaml up -d
          	"""
 			 timeout(5) {
