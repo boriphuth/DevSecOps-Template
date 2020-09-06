@@ -48,11 +48,8 @@ node {
             }
 	  	}
     }    
-	stage('Install Sonarqube and Anchore-Engine'){
+	stage('Install Sonarqube'){
 		catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
-	    	sh """
-				docker-compose -f Anchore-Engine/docker-compose.yaml up -d
-         	"""
 			sh """
                 docker run -d \
                 -p 9000:9000 \
@@ -88,6 +85,20 @@ node {
 			}
     	}
 	}
+	stage('Install Anchore-Engine'){
+		catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
+	    	sh """
+				docker-compose -f Anchore-Engine/docker-compose.yaml up -d
+         	"""
+			 timeout(5) {
+                waitUntil {
+                    def r = sh script: 'wget -q http://192.168.34.16:8228 -O /dev/null', returnStatus: true
+                    return (r == 0);
+                }
+            }
+            sleep(60)
+	  	}
+    } 
 	stage('Source Composition Analysis'){
 		catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE'){
 	    	sh "git clone ${appRepoURL} || true" 
