@@ -48,14 +48,43 @@ node {
             }
 	  	}
     }    
+	stage('Source Composition Analysis'){
+		catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE'){
+	    	sh "git clone ${appRepoURL} || true" 
+            repoName = sh(returnStdout: true, script: """echo \$(basename ${appRepoURL.trim()})""").trim()
+            repoName = sh(returnStdout: true, script: """echo ${repoName} | sed 's/.git//g'""").trim()
+	    	if (appType.equalsIgnoreCase("Java")){
+	      		app_type = "pom.xml"	
+	    	}
+			else {
+				app_type = "package.json"
+				dir ("${repoName}"){
+					sh "npm install"
+				}
+			}
+        	snykSecurity failOnIssues: false, monitorProjectOnBuild: false, snykInstallation: 'Snyk', snykTokenId: 'snyk-token', targetFile: "${repoName}/${folderName}/${app_type}"
+		   
+			// def snykFile = readFile 'snyk_report.html'
+			// if (snykFile.exists()) {
+			// 	throw new Exception("Vulnerable dependencies found!")    
+			// }
+			// else {
+			// 	echo "Please enter the app repo URL"
+			// 	currentBuild.Result = "FAILURE"
+			// }
+	  	}
+	}
 	stage('Install Sonarqube'){
 		catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
+			// sh """
+            //     docker run -d \
+            //     -p 9000:9000 \
+            //     -v sonarqube_extensions:/opt/sonarqube/extensions \
+            //     sonarqube:8.4-community
+         	// """ 
 			sh """
-                docker run -d \
-                -p 9000:9000 \
-                -v sonarqube_extensions:/opt/sonarqube/extensions \
-                sonarqube:8.4-community
-         	"""  
+                docker-compose -f Sonarqube/docker-compose.yaml up -d
+         	""" 
 			 timeout(5) {
                 waitUntil {
                     def r = sh script: 'wget -q http://192.168.34.16:9000 -O /dev/null', returnStatus: true
@@ -99,32 +128,6 @@ node {
             sleep(60)
 	  	}
     } 
-	stage('Source Composition Analysis'){
-		catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE'){
-	    	sh "git clone ${appRepoURL} || true" 
-            repoName = sh(returnStdout: true, script: """echo \$(basename ${appRepoURL.trim()})""").trim()
-            repoName = sh(returnStdout: true, script: """echo ${repoName} | sed 's/.git//g'""").trim()
-	    	if (appType.equalsIgnoreCase("Java")){
-	      		app_type = "pom.xml"	
-	    	}
-			else {
-				app_type = "package.json"
-				dir ("${repoName}"){
-					sh "npm install"
-				}
-			}
-        	snykSecurity failOnIssues: false, monitorProjectOnBuild: false, snykInstallation: 'Snyk', snykTokenId: 'snyk-token', targetFile: "${repoName}/${folderName}/${app_type}"
-		   
-			// def snykFile = readFile 'snyk_report.html'
-			// if (snykFile.exists()) {
-			// 	throw new Exception("Vulnerable dependencies found!")    
-			// }
-			// else {
-			// 	echo "Please enter the app repo URL"
-			// 	currentBuild.Result = "FAILURE"
-			// }
-	  	}
-	}
 	stage('Container Image Scan'){
     	catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
 	    	sh "rm anchore_images || true"
