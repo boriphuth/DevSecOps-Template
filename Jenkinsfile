@@ -31,7 +31,24 @@ node {
          	"""
 	  	}
     }
-    stage('Install Sonarqube and Anchore-Engine'){
+    stage('Check secrets'){
+		catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE'){
+    		sh """
+            	rm trufflehog || true
+            	docker run gesellix/trufflehog --json --regex ${appRepoURL} > trufflehog
+            	cat trufflehog
+            """
+	    	def truffle = readFile "trufflehog"   
+	    	if (truffle.length() == 0){
+              echo "Good to go" 
+            }
+            else {
+            	echo "Warning! Secrets are committed into your git repository."
+	      		throw new Exception("Secrets might be committed into your git repo")
+            }
+	  	}
+    }    
+	stage('Install Sonarqube and Anchore-Engine'){
 		catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
 	    	sh """
 				docker-compose -f Anchore-Engine/docker-compose.yaml up -d
@@ -51,23 +68,6 @@ node {
             sleep(60)
 	  	}
     } 
-    stage('Check secrets'){
-		catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE'){
-    		sh """
-            	rm trufflehog || true
-            	docker run gesellix/trufflehog --json --regex ${appRepoURL} > trufflehog
-            	cat trufflehog
-            """
-	    	def truffle = readFile "trufflehog"   
-	    	if (truffle.length() == 0){
-              echo "Good to go" 
-            }
-            else {
-            	echo "Warning! Secrets are committed into your git repository."
-	      		throw new Exception("Secrets might be committed into your git repo")
-            }
-	  	}
-    }    
 	stage('Source Composition Analysis'){
 		catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE'){
 	    	sh "git clone ${appRepoURL} || true" 
