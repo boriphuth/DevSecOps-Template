@@ -35,9 +35,9 @@ node {
 		catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
 	    	sh """
 				docker-compose -f Sonarqube/docker-compose.yaml up -d
-            	docker-compose -f Anchore-Engine/docker-compose.yaml up -d
          	"""
 			// sh """
+			//     docker-compose -f Anchore-Engine/docker-compose.yaml up -d
             //     docker run -d \
             //     -p 9000:9000 \
             //     -v sonarqube_extensions:/opt/sonarqube/extensions \
