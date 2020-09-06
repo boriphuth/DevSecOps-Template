@@ -68,6 +68,26 @@ node {
             sleep(60)
 	  	}
     } 
+	stage('SAST'){
+		catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
+			if (appType.equalsIgnoreCase("Java")){
+				withSonarQubeEnv('sonarqube'){
+					dir("${repoName}/${folderName}"){
+						sh "mvn clean package sonar:sonar"
+					}
+				}
+				
+				sleep(60)
+
+				timeout(5) {
+					def qg = waitForQualityGate() 
+					if (qg.status != 'OK') {     
+						error "Pipeline aborted due to quality gate failure: ${qg.status}"    
+					}	
+				}
+			}
+    	}
+	}
 	stage('Source Composition Analysis'){
 		catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE'){
 	    	sh "git clone ${appRepoURL} || true" 
@@ -93,26 +113,6 @@ node {
 			// 	currentBuild.Result = "FAILURE"
 			// }
 	  	}
-	}
-	stage('SAST'){
-		catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
-			if (appType.equalsIgnoreCase("Java")){
-				withSonarQubeEnv('sonarqube'){
-					dir("${repoName}/${folderName}"){
-						sh "mvn clean package sonar:sonar"
-					}
-				}
-				
-				sleep(60)
-
-				timeout(5) {
-					def qg = waitForQualityGate() 
-					if (qg.status != 'OK') {     
-						error "Pipeline aborted due to quality gate failure: ${qg.status}"    
-					}	
-				}
-			}
-    	}
 	}
 	stage('Container Image Scan'){
     	catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE'){
