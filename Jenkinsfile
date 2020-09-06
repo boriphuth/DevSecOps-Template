@@ -28,6 +28,13 @@ node {
             	docker-compose -f Sonarqube/sonar.yml up -d
             	docker-compose -f Anchore-Engine/docker-compose.yaml up -d
          	"""
+			 timeout(5) {
+                waitUntil {
+                    def r = sh script: 'wget -q http://192.168.34.16:9000 -O /dev/null', returnStatus: true
+                    return (r == 0);
+                }
+            }
+            sleep(60)
 	  	}
     } 
     stage('Check secrets'){
